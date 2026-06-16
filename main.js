@@ -177,7 +177,16 @@ function renderDictionary() {
 
 function startStudyMode() {
   // Use a shuffled list so questions appear in random order each session
-  studyList = shuffleArray(getFilteredWords());
+  const pool = getFilteredWords();
+  if (pool.length === 0) {
+    studyList = [];
+    studyIndex = 0;
+    renderStudyCard();
+    return;
+  }
+  studyList = shuffleArray(pool);
+  // append first item to the end so the sequence's start and end match
+  if (studyList.length > 0) studyList.push(studyList[0]);
   studyIndex = 0;
   renderStudyCard();
 }
@@ -217,7 +226,14 @@ function moveStudy(delta) {
 }
 
 function shuffleStudy() {
-  studyList = shuffleArray(studyList);
+  // shuffle the existing study list but preserve the "start==end" property
+  if (studyList.length === 0) return;
+  const first = studyList[0];
+  // remove appended duplicate if present
+  let core = studyList.slice(0, studyList.length - 1);
+  core = shuffleArray(core);
+  studyList = core;
+  if (studyList.length > 0) studyList.push(studyList[0]);
   studyIndex = 0;
   renderStudyCard();
 }
@@ -233,7 +249,18 @@ function markStudy(isKnown) {
 
 function startQuizMode() {
   // Prepare a shuffled queue of questions so each appears once per run
-  quizQueue = shuffleArray(getFilteredWords());
+  const pool = getFilteredWords();
+  if (pool.length < 2) {
+    quizQueue = [];
+    quizIndex = 0;
+    quizScore = { correct: 0, total: 0 };
+    nextQuizQuestion();
+    return;
+  }
+
+  quizQueue = shuffleArray(pool);
+  // append first item to the end so the sequence's start and end match
+  if (quizQueue.length > 0) quizQueue.push(quizQueue[0]);
   quizIndex = 0;
   quizScore = { correct: 0, total: 0 };
   nextQuizQuestion();
@@ -251,16 +278,9 @@ function nextQuizQuestion() {
     return;
   }
 
-  // if we've exhausted the queue, show summary
-  if (quizIndex >= quizQueue.length) {
-    document.getElementById("quizWord").textContent = "Test tugadi";
-    document.getElementById("quizUnitLabel").textContent = "Test";
-    document.getElementById("quizOptions").innerHTML = "";
-    updateQuizScore();
-    return;
-  }
-
-  quizCurrent = quizQueue[quizIndex++];
+  // circular behavior: loop through the queue indefinitely
+  quizCurrent = quizQueue[quizIndex % quizQueue.length];
+  quizIndex++;
 
   // generate wrong options from the rest of the filtered set
   const others = getFilteredWords().filter((w) => w.id !== quizCurrent.id);
