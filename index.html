@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lug'at Kartotekasi — Shaxsiy so'zlar to'plami</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand">
+      <span class="brand-mark">UZ→EN</span>
+      <span class="brand-name">Lug'at Kartotekasi</span>
+    </a>
+    <nav>
+      <a href="admin.html">Admin panel →</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="container hero-grid">
+    <div>
+      <span class="hero-eyebrow">Darslik bo'yicha shaxsiy kartoteka</span>
+      <h1>Har bir unitdan o'rgangan so'zingiz — bitta joyda.</h1>
+      <p class="lede">Kitobning har bir unitidagi yangi so'zlarni o'zbekcha ma'nosi va misol bilan saqlang, keyin kartochka yoki test rejimida takrorlang.</p>
+      <div class="hero-stats">
+        <div class="stat">
+          <span class="num" id="statTotal">0</span>
+          <span class="label">Jami so'z</span>
+        </div>
+        <div class="stat">
+          <span class="num" id="statUnits">0</span>
+          <span class="label">Unit</span>
+        </div>
+        <div class="stat">
+          <span class="num" id="statKnown">0</span>
+          <span class="label">Yodlangan</span>
+        </div>
+      </div>
+    </div>
+    <div class="wod-wrap">
+      <span class="wod-caption">Kun so'zi — bosib ko'ring</span>
+      <div class="flip-scene">
+        <div class="flip-card" id="wodCard">
+          <div class="flip-face front">
+            <div class="punch"></div>
+            <span class="word" id="wodWord">—</span>
+            <span class="pos" id="wodPos"></span>
+            <span class="hint">tagini ko'rish uchun bosing</span>
+          </div>
+          <div class="flip-face back">
+            <span class="meaning" id="wodMeaning">—</span>
+            <span class="hint" id="wodExample"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="controls">
+  <div class="container">
+    <div class="controls-row">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="text" id="searchInput" placeholder="So'z yoki ma'nosini qidirish..." />
+      </div>
+      <div class="mode-switch" id="modeSwitch">
+        <button data-mode="dict" class="active">Lug'at</button>
+        <button data-mode="study">Kartochka</button>
+        <button data-mode="quiz">Test</button>
+      </div>
+    </div>
+    <div class="unit-tabs" id="unitTabs"></div>
+  </div>
+</section>
+
+<main class="container">
+
+  <!-- DICTIONARY MODE -->
+  <section id="dictView">
+    <div class="card-grid" id="cardGrid"></div>
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <div class="big">Bu yerda hali so'z yo'q</div>
+      <p>Admin paneldan birinchi so'zingizni qo'shing.</p>
+    </div>
+  </section>
+
+  <!-- FLASHCARD STUDY MODE -->
+  <section id="studyView" style="display:none;">
+    <div class="study-wrap">
+      <div class="study-progress" id="studyProgress">0 / 0</div>
+      <div class="study-card-scene">
+        <div class="study-card" id="studyCard">
+          <div class="study-face front">
+            <div class="punch"></div>
+            <span class="word-tab" id="studyUnitTab">UNIT</span>
+            <span class="headword" id="studyWord">—</span>
+            <span class="pos-tag" id="studyPos"></span>
+          </div>
+          <div class="study-face back">
+            <span class="meaning-uz" id="studyMeaning">—</span>
+            <span class="example" id="studyExample"></span>
+          </div>
+        </div>
+      </div>
+      <div class="study-controls">
+        <button class="btn btn-ghost" id="studyPrev">← Oldingi</button>
+        <button class="btn btn-brick" id="studyUnknown">Takrorlayman</button>
+        <button class="btn btn-ok" id="studyKnown">Bilaman ✓</button>
+        <button class="btn btn-ghost" id="studyNext">Keyingi →</button>
+      </div>
+      <div class="study-controls">
+        <button class="btn btn-amber btn-sm" id="studyShuffle">🔀 Aralashtirish</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUIZ MODE -->
+  <section id="quizView" style="display:none;">
+    <div class="quiz-wrap">
+      <div class="quiz-score" id="quizScore">Ball: 0 / 0</div>
+      <div class="quiz-prompt">
+        <span class="label" id="quizUnitLabel">Unit</span>
+        <div class="word" id="quizWord">—</div>
+      </div>
+      <div class="quiz-options" id="quizOptions"></div>
+      <div class="quiz-next">
+        <button class="btn btn-primary" id="quizNextBtn" style="display:none;">Keyingi savol →</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  Ma'lumotlar shu brauzerda saqlanadi · <a href="admin.html">Admin panelga kirish</a>
+</footer>
+
+<script src="data.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
