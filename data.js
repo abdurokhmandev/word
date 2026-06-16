@@ -96,18 +96,44 @@ function getUnits(words) {
   });
 }
 
+/*
+  importWords — takomillashtirilgan versiya
+  newWords: Array yoki { words: Array }
+  mode: "replace" | "merge"
+  - replace: to'liq almashtiradi (yangi array STORAGE_KEY ga yoziladi)
+  - merge: mavjudlarga qo'shadi, id ziddiyligi bo'lsa yangi id hosil qilinadi
+*/
 function importWords(newWords, mode) {
-  // mode: "replace" | "merge"
+  // normalize input to array
+  let arr = null;
+  if (Array.isArray(newWords)) arr = newWords;
+  else if (newWords && Array.isArray(newWords.words)) arr = newWords.words;
+  else throw new Error("Noto'g'ri import format: array yoki { words: [...] } kerak");
+
+  // normalize entries and ensure required fields & ids
+  const normalized = arr.map((w) => ({
+    id: w && w.id ? String(w.id) : generateId(),
+    unit: (w && w.unit ? String(w.unit) : "").trim(),
+    word: (w && w.word ? String(w.word) : "").trim(),
+    pos: (w && w.pos ? String(w.pos) : "").trim(),
+    meaning: (w && w.meaning ? String(w.meaning) : "").trim(),
+    example: (w && w.example ? String(w.example) : "").trim(),
+  }));
+
   if (mode === "replace") {
-    saveWords(newWords);
+    saveWords(normalized);
   } else {
     const existing = loadWords();
     const existingIds = new Set(existing.map((w) => w.id));
-    const merged = existing.concat(
-      newWords.map((w) => (existingIds.has(w.id) ? { ...w, id: generateId() } : w))
+    const toAdd = normalized.map((w) =>
+      existingIds.has(w.id) ? { ...w, id: generateId() } : w
     );
+    const merged = existing.concat(toAdd);
     saveWords(merged);
   }
+
+  // mark seeded so seedIfEmpty won't overwrite later
+  localStorage.setItem(SEED_FLAG_KEY, "1");
 }
 
 function exportWords() {

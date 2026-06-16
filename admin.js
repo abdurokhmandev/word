@@ -276,14 +276,21 @@ function bindImportExport() {
     reader.onload = () => {
       try {
         const parsed = JSON.parse(reader.result);
-        if (!Array.isArray(parsed)) throw new Error("Noto'g'ri format");
+
+        // Accept either an Array or { words: Array }
+        let dataArray = null;
+        if (Array.isArray(parsed)) dataArray = parsed;
+        else if (parsed && Array.isArray(parsed.words)) dataArray = parsed.words;
+        else throw new Error("Noto'g'ri format");
+
         const merge = confirm("Mavjud so'zlar bilan birlashtirilsinmi?\nOK = birlashtirish, Bekor qilish = almashtirish");
-        importWords(parsed, merge ? "merge" : "replace");
+        importWords(dataArray, merge ? "merge" : "replace");
         showToast("Ma'lumotlar muvaffaqiyatli yuklandi.");
         refreshUnitOptions();
         renderStats();
         renderTable();
       } catch (err) {
+        console.error("Import error:", err);
         showToast("Fayl noto'g'ri formatda.", true);
       }
       fileInput.value = "";
