@@ -12,7 +12,8 @@ let studyList = [];
 let studyIndex = 0;
 
 /* ---- quiz state ---- */
-let quizPool = [];
+let quizQueue = [];
+let quizIndex = 0;
 let quizCurrent = null;
 let quizScore = { correct: 0, total: 0 };
 let quizAnswered = false;
@@ -175,7 +176,8 @@ function renderDictionary() {
 /* ========================= FLASHCARD STUDY MODE ========================= */
 
 function startStudyMode() {
-  studyList = getFilteredWords();
+  // Use a shuffled list so questions appear in random order each session
+  studyList = shuffleArray(getFilteredWords());
   studyIndex = 0;
   renderStudyCard();
 }
@@ -194,6 +196,10 @@ function renderStudyCard() {
     return;
   }
 
+  // ensure index is within bounds
+  if (studyIndex < 0) studyIndex = 0;
+  if (studyIndex >= studyList.length) studyIndex = studyList.length - 1;
+
   const w = studyList[studyIndex];
   document.getElementById("studyProgress").textContent = `${studyIndex + 1} / ${studyList.length}`;
   document.getElementById("studyUnitTab").textContent = w.unit;
@@ -211,10 +217,7 @@ function moveStudy(delta) {
 }
 
 function shuffleStudy() {
-  for (let i = studyList.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [studyList[i], studyList[j]] = [studyList[j], studyList[i]];
-  }
+  studyList = shuffleArray(studyList);
   studyIndex = 0;
   renderStudyCard();
 }
@@ -229,7 +232,9 @@ function markStudy(isKnown) {
 /* ========================= QUIZ MODE ========================= */
 
 function startQuizMode() {
-  quizPool = getFilteredWords();
+  // Prepare a shuffled queue of questions so each appears once per run
+  quizQueue = shuffleArray(getFilteredWords());
+  quizIndex = 0;
   quizScore = { correct: 0, total: 0 };
   nextQuizQuestion();
 }
@@ -238,17 +243,27 @@ function nextQuizQuestion() {
   quizAnswered = false;
   document.getElementById("quizNextBtn").style.display = "none";
 
-  if (quizPool.length < 2) {
+  // if no enough questions
+  if (quizQueue.length < 2) {
     document.getElementById("quizWord").textContent = "Kamida 2 ta so'z kerak";
     document.getElementById("quizUnitLabel").textContent = "Test";
     document.getElementById("quizOptions").innerHTML = "";
     return;
   }
 
-  quizCurrent = quizPool[Math.floor(Math.random() * quizPool.length)];
+  // if we've exhausted the queue, show summary
+  if (quizIndex >= quizQueue.length) {
+    document.getElementById("quizWord").textContent = "Test tugadi";
+    document.getElementById("quizUnitLabel").textContent = "Test";
+    document.getElementById("quizOptions").innerHTML = "";
+    updateQuizScore();
+    return;
+  }
 
-  // generate wrong options from the rest of the words (prefer same filtered pool)
-  const others = quizPool.filter((w) => w.id !== quizCurrent.id);
+  quizCurrent = quizQueue[quizIndex++];
+
+  // generate wrong options from the rest of the filtered set
+  const others = getFilteredWords().filter((w) => w.id !== quizCurrent.id);
   const wrongChoices = shuffleArray(others).slice(0, 3).map((w) => w.meaning);
   const options = shuffleArray([quizCurrent.meaning, ...wrongChoices]);
 
