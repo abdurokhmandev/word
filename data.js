@@ -57,14 +57,31 @@ function getWords() {
   return loadWords();
 }
 
+function wordKey(word, unit) {
+  return `${String(word || "").trim().toLowerCase()}|${String(unit || "").trim().toLowerCase()}`;
+}
+
+function existsWord(word, unit) {
+  const key = wordKey(word, unit);
+  return loadWords().some((w) => wordKey(w.word, w.unit) === key);
+}
+
 function addWord({ unit, word, pos, meaning, example }) {
+  const u = (unit || "").trim();
+  const wd = (word || "").trim();
+  const mn = (meaning || "").trim();
+  if (!u || !wd || !mn) return null; // required fields
+
+  // check duplicate by (word + unit)
+  if (existsWord(wd, u)) return null;
+
   const words = loadWords();
   const entry = {
     id: generateId(),
-    unit: unit.trim(),
-    word: word.trim(),
+    unit: u,
+    word: wd,
     pos: (pos || "").trim(),
-    meaning: meaning.trim(),
+    meaning: mn,
     example: (example || "").trim(),
   };
   words.push(entry);
@@ -101,7 +118,8 @@ function getUnits(words) {
   newWords: Array yoki { words: Array }
   mode: "replace" | "merge"
   - replace: to'liq almashtiradi (yangi array STORAGE_KEY ga yoziladi)
-  - merge: mavjudlarga qo'shadi, id ziddiyligi bo'lsa yangi id hosil qilinadi
+  - merge: mavjudlarga qo'shadi, lekin so'z+unit ziddiyligi bo'lsa o'tkaziladi
+  RETURN: statistik obyekti { added, skipped, replaced }
 */
 function importWords(newWords, mode) {
   // normalize input to array
@@ -120,20 +138,48 @@ function importWords(newWords, mode) {
     example: (w && w.example ? String(w.example) : "").trim(),
   }));
 
+  let added = 0;
+  let skipped = 0;
+  let replaced = 0;
+
   if (mode === "replace") {
-    saveWords(normalized);
+    // remove duplicates inside normalized by word+unit (keep first)
+    const seen = new Set();
+    const deduped = [];
+    for (const w of normalized) {
+      const k = wordKey(w.word, w.unit);
+      if (!w.word || !w.unit || !w.meaning) { skipped++; continue; }
+      if (seen.has(k)) { skipped++; continue; }
+      seen.add(k);
+      // ensure id
+      if (!w.id) w.id = generateId();
+      deduped.push(w);
+      added++;
+    }
+    saveWords(deduped);
+    replaced = added; // replaced count roughly
   } else {
     const existing = loadWords();
-    const existingIds = new Set(existing.map((w) => w.id));
-    const toAdd = normalized.map((w) =>
-      existingIds.has(w.id) ? { ...w, id: generateId() } : w
-    );
+    const existingKeys = new Set(existing.map((w) => wordKey(w.word, w.unit)));
+    const toAdd = [];
+    for (const w of normalized) {
+      if (!w.word || !w.unit || !w.meaning) { skipped++; continue; }
+      const k = wordKey(w.word, w.unit);
+      if (existingKeys.has(k)) { skipped++; continue; }
+      // ensure id uniqueness
+      if (!w.id || existing.some((e) => e.id === w.id)) w.id = generateId();
+      toAdd.push(w);
+      existingKeys.add(k);
+      added++;
+    }
     const merged = existing.concat(toAdd);
     saveWords(merged);
   }
 
   // mark seeded so seedIfEmpty won't overwrite later
   localStorage.setItem(SEED_FLAG_KEY, "1");
+
+  return { added, skipped, replaced };
 }
 
 function exportWords() {

@@ -1,0 +1,11 @@
+<!-- Quick add textarea for admin (added below import-export in admin.html) -->
+<div class="quick-add">
+  <button class="btn btn-ghost btn-sm" id="quickAddToggle">⏷ Tez qo'shish</button>
+  <div id="quickAddArea" style="display:none; margin-top:10px;">
+    <textarea id="quickAddInput" placeholder='JSON array like [{"unit":"1-unit","word":"...","meaning":"..."},...] or lines: word|meaning|unit|pos|example' style="width:100%;min-height:120px;"></textarea>
+    <div style="margin-top:8px; display:flex; gap:8px;">
+      <button class="btn btn-primary btn-sm" id="quickAddApply">Qo'shish</button>
+      <button class="btn btn-ghost btn-sm" id="quickAddClear">Bekor qilish</button>
+    </div>
+  </div>
+</div>
